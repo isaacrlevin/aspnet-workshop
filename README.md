@@ -26,12 +26,17 @@ There are a few tools that you may or may not have to complete this workshop. Th
 <details>
   <summary>Prereqs for Workshop</summary>
 
+  <h3>All OS</h3> 
+  
   * .NET 8 (.NET 9 Preview if we have time)
+  * Docker Desktop
+  * Visual Studio Code (C# Dev Kit Extension)
+      
+  <h3>Extras for Windows</h3>
+  
   * Visual Studio 2022 (Community is fine)
-  * Visual Studio Code
   * Microsoft Terminal
   * Windows Subsystem for Linux (Ubuntu is a fine distro)
-  * Docker Desktop
 
 </details>
 
