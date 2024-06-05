@@ -1,0 +1,178 @@
+﻿@inject NavigationManager NavigationManager
+@inject IApiClient ApiClient
+@inject AppState AppState
+@if (dayOffsets != null)
+{
+    <ul class="nav nav-pills mb-3">
+        @foreach (var day in dayOffsets)
+        {
+            <li role="presentation" class="nav-item">
+                <a style="cursor:pointer" class="nav-link @(CurrentDayOffset == day.Offset ? "active" : null)" @onclick="@(() => ChangeDate(day.Offset))">@day.DayofWeek?.ToString()</a>
+            </li>
+        }
+    </ul>
+}
+@if (groupedSessions != null && groupedSessions.Count() > 0)
+{
+    <div class="agenda">
+        @foreach (var timeSlot in groupedSessions)
+        {
+            <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
+            <div class="row">
+                @foreach (var session in timeSlot)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card shadow session h-100">
+                            <div class="card-header">@session.Track?.Name</div>
+                            <div class="card-body">
+                                <h5 class="card-title"><a href="/Session/@session.Id">@session.Title</a></h5>
+                            </div>
+                            <div class="card-footer">
+                                <ul class="list-inline mb-0">
+                                    @foreach (var speaker in session.Speakers)
+                                    {
+                                        <li class="list-inline-item">
+                                            <a href="Speaker/@speaker.Id">@speaker.Name</a>
+                                        </li>
+                                    }
+                                </ul>
+                                @if (AppState.IsLoggedIn)
+                                {
+                                    <p class="mb-0">
+                                        @if (AppState.IsAdmin)
+                                        {
+                                            <a href="/Admin/EditSession/@session.Id" class="btn btn-default btn-sm">Edit</a>
+                                        }
+                                        @if (AppState.IsAttendee)
+                                        {
+                                            @if (userSessionIds.Contains(session.Id))
+                                            {
+                                                <button @onclick="@(() => RemoveSessionToUser(session.Id))" class="btn btn-default btn-sm bg-transparent" title="Remove from my personal agenda">
+                                                    <i class="bi bi-star" aria-hidden="true"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button @onclick="@(() => AddSessionToUser(session.Id))" class="btn btn-default btn-sm bg-transparent" title="Add to my personal agenda">
+                                                    <i class="bi bi-star-outline" aria-hidden="true"></i>
+                                                </button>
+                                            }
+
+                                        }
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <h3>You Have Not Added Any Sessions</h3>
+}
+
+
+@code {
+    private IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> groupedSessions { get; set; } = new List<IGrouping<DateTimeOffset?, SessionResponse>>();
+
+    private List<SessionResponse> sessions { get; set; } = new List<SessionResponse>();
+
+    private IEnumerable<(int Offset, DayOfWeek? DayofWeek)> dayOffsets { get; set; } = null!;
+
+    private List<int> userSessionIds { get; set; } = new List<int>();
+
+    [Parameter]
+    public int CurrentDayOffset { get; set; }
+
+    [Parameter]
+    public bool GetMyAgenda { get; set; } = false;
+
+    private string? currentUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnChange += RaiseStateHasChanged;
+
+        currentUrl = NavigationManager.BaseUri;
+
+        if (AppState.AllSessions == null || AppState.AllSessions.Count == 0)
+        {
+            AppState.SetAllSessions(await GetSessionsAsync());
+        }
+
+
+        if (AppState.IsAttendee)
+        {
+            //Attendee
+            AppState.SetUserSessions(await ApiClient.GetSessionsByAttendeeAsync(AppState.UserName));
+            userSessionIds = AppState.UserSessions.Select(u => u.Id).ToList();
+        }
+
+        if (GetMyAgenda)
+        {
+            sessions = AppState.UserSessions;
+        }
+        else
+        {
+            sessions = AppState!.AllSessions!;
+        }
+
+        var startDate = sessions.Min(s => s.StartTime?.Date);
+
+        dayOffsets = sessions.Select(s => s.StartTime?.Date)
+                             .Distinct()
+                             .OrderBy(d => d)
+                             .Select(d => ((int)Math.Floor((d!.Value - startDate)?.TotalDays ?? 0),
+                                             d?.DayOfWeek))
+                             .ToList();
+        PopulateAgenda();
+    }
+
+    private void ChangeDate(int offset)
+    {
+        CurrentDayOffset = offset;
+        PopulateAgenda();
+    }
+
+    private void PopulateAgenda()
+    {
+        var filterDate = sessions.Min(s => s.StartTime?.Date)?.AddDays(CurrentDayOffset);
+
+        groupedSessions = sessions.Where(s => s.StartTime?.Date == filterDate)
+                           .OrderBy(s => s.TrackId)
+                           .GroupBy(s => s.StartTime)
+                           .OrderBy(g => g.Key);
+    }
+
+    private async Task AddSessionToUser(int SessionId)
+    {
+        await ApiClient.AddSessionToAttendeeAsync(AppState.UserName, SessionId);
+        AppState.AddSessionToUser(SessionId);
+        userSessionIds = AppState.UserSessions.Select(u => u.Id).ToList();
+    }
+
+    private async Task RemoveSessionToUser(int SessionId)
+    {
+        await ApiClient.RemoveSessionFromAttendeeAsync(AppState.UserName, SessionId);
+        AppState.RemoveSessionFromUser(SessionId);
+        userSessionIds = AppState.UserSessions.Select(u => u.Id).ToList();
+    }
+
+    protected virtual Task<List<SessionResponse>> GetSessionsAsync()
+    {
+        return ApiClient.GetSessionsAsync();
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= RaiseStateHasChanged;
+    }
+
+    private void RaiseStateHasChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+}

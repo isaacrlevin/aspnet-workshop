@@ -1,0 +1,16 @@
+﻿@page "/MyAgenda/{day:int?}"
+@attribute [Authorize]
+
+@inject IApiClient _apiClient
+@inject ILogger<Home> Logger
+<h1 class="mb-4">My Agenda - My Conference @System.DateTime.Now.Year</h1>
+
+
+<Agenda CurrentDayOffset="Day" GetMyAgenda="true" />
+
+
+@code {
+    public bool IsAdmin { get; set; }
+
+    [Parameter] public int Day { get; set; }
+}

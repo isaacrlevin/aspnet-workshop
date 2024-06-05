@@ -1,0 +1,126 @@
+﻿@page "/Welcome"
+
+@attribute [SkipWelcome]
+
+@inject NavigationManager NavigationManager
+@inject IApiClient ApiClient
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AppState AppState
+<h2>Welcome @User.UserName</h2>
+<p>
+    Register as an attendee to get access to cool features.
+</p>
+
+<EditForm Model="Input" method="post" OnValidSubmit="CreateUser" FormName="create">
+    <DataAnnotationsValidator />
+    <CustomValidation @ref="customValidation" />
+    <ValidationSummary class="text-danger" role="alert" />
+    <input @bind-value="Input.UserName" type="hidden" />
+    <div class="form-group">
+        <label for="firstname" class="form-label">Email</label>
+        <div class="row">
+            <div class="col-md-6">
+                <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="First Name" />
+            </div>
+        </div>
+        <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+    </div>
+    <div class="form-group">
+        <label for="lastname" class="form-label">Last Name</label>
+        <div class="row">
+
+
+            <div class="col-md-6">
+                <InputText @bind-Value="Input.LastName" class="form-control" placeholder="Last Name" />
+            </div>
+        </div>
+        <ValidationMessage For="() => Input.LastName" class="text-danger" />
+    </div>
+    <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <div class="row">
+            <div class="col-md-6">
+                <InputText @bind-Value="Input.EmailAddress" class="form-control" placeholder="Email" />
+                <ValidationMessage For="() => Input.EmailAddress" class="text-danger" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public ApplicationUser User { get; set; } = new ApplicationUser();
+
+    [SupplyParameterFromForm]
+    private Attendee Input { get; set; } = new();
+
+    private CustomValidation? customValidation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AppState.IsLoggedIn && (AppState.IsAttendee || AppState.IsAdmin))
+        {            
+            NavigationManager.NavigateTo("/");
+        }
+
+
+        if (HttpContextAccessor.HttpContext == null || HttpContextAccessor.HttpContext.User == null)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        var httpContextUser = HttpContextAccessor?.HttpContext?.User;
+
+        if (!httpContextUser!.Identity!.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        User = await UserManager.FindByNameAsync(httpContextUser!.Identity!.Name!);
+
+        if (User == null)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        Input.UserName = User!.UserName!;
+        //var isAttendee = await UserManager.IsAttendeeAsync(User);
+
+        AppState.SetUserName(User!.UserName!);
+        AppState.SetIsAttendee(User.IsAttendee);
+
+        if (User.IsAttendee)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task CreateUser()
+    {
+        customValidation?.ClearErrors();
+
+        var errors = new Dictionary<string, List<string>>();
+        var success = await ApiClient.AddAttendeeAsync(Input);
+
+        if (!success)
+        {
+            errors.Add("", new List<string> { "There was an issue creating the attendee for this user." });
+            customValidation?.DisplayErrors(errors);
+        }
+        else
+        {
+            //await UserManager.MakeAttendeeAsync(User);
+            User.IsAttendee = true;
+            UserManager.UpdateAsync(User);
+            await SignInManager.RefreshSignInAsync(User);
+            AppState.SetIsAttendee(User.IsAttendee);
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

@@ -1,0 +1,49 @@
+﻿@page "/Speakers"
+
+@inject IApiClient ApiClient
+@inject NavigationManager NavigationManager
+
+<h1 class="mb-4">Speakers</h1>
+
+@if (AllSpeakers != null)
+{
+    <div class="agenda">
+
+        @foreach (var speakerLetter in AllSpeakers)
+        {
+            <h4>@speakerLetter.Key.ToUpper()</h4>
+            <div class="row">
+                @foreach (var speaker in speakerLetter)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card shadow session h-100">
+                            <div class="card-header">@speaker.Name</div>
+                            <div class="card-body">
+                                <h5 class="card-title"><a href="/Speaker/@speaker.Id">@speaker.Name</a></h5>
+                            </div>
+                            <div class="card-footer">
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+}
+@code {
+
+    public IEnumerable<IGrouping<string, SpeakerResponse>> AllSpeakers { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var speakers = await GetSpeakersAsync();
+
+        AllSpeakers = speakers.GroupBy(x => x.Name.First().ToString(), StringComparer.InvariantCultureIgnoreCase);
+    }
+
+    protected virtual Task<List<SpeakerResponse>> GetSpeakersAsync()
+    {
+        return ApiClient.GetSpeakersAsync();
+    }
+}
