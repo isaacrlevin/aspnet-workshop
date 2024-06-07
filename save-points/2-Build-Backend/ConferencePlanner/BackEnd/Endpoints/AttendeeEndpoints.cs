@@ -38,6 +38,8 @@ public static class AttendeeEndpoints
                 .ToListAsync();
 
             return Results.Ok(sessions);
+
+
         })
         .WithTags("Attendee")
         .WithName("GetAllSessionsForAttendee")
