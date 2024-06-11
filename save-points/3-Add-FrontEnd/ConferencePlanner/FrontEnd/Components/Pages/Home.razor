@@ -7,6 +7,8 @@
 
 <PageTitle>Home</PageTitle>
 
+<h1 class="mb-4">My Conference @System.DateTime.Now.Year</h1>
+
 <ul class="nav nav-pills mb-3">
     @foreach (var day in dayOffsets)
     {
@@ -16,20 +18,42 @@
     }
 </ul>
 
-<div class="agenda">
-    <h1>My Conference @System.DateTime.Now.Year</h1>
-
-    @foreach (var timeSlot in groupedSessions)
-    {
-        <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
-        <ul>
-            @foreach (var session in timeSlot)
-            {
-                <li>@session.Title</li>
-            }
-        </ul>
-    }
-</div>
+@if (groupedSessions != null && groupedSessions.Count() > 0)
+{
+    <div class="agenda">
+        @foreach (var timeSlot in groupedSessions)
+        {
+            <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
+            <div class="row">
+                @foreach (var session in timeSlot)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card shadow session h-100">
+                            <div class="card-header">@session.Track?.Name</div>
+                            <div class="card-body">
+                                <h5 class="card-title"><a href="/Session/@session.Id">@session.Title</a></h5>
+                            </div>
+                            <div class="card-footer">
+                                <ul class="list-inline mb-0">
+                                    @foreach (var speaker in session.Speakers)
+                                    {
+                                        <li class="list-inline-item">
+                                            <a href="Speaker/@speaker.Id">@speaker.Name</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <h3>You Have Not Added Any Sessions</h3>
+}
 
 
 
@@ -38,13 +62,15 @@
 
     private IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> groupedSessions { get; set; } = new List<IGrouping<DateTimeOffset?, SessionResponse>>();
 
-    private IEnumerable<(int Offset, DayOfWeek? DayofWeek)> dayOffsets { get; set; } = null!;
+    private IEnumerable<(int Offset, DayOfWeek? DayofWeek)> dayOffsets { get; set; } = new List<(int Offset, DayOfWeek? DayofWeek)>();
 
     public int CurrentDayOffset { get; set; }
 
+    private List<SessionResponse> sessions { get; set; } = new List<SessionResponse>();
+
     protected override async Task OnInitializedAsync()
     {
-        var sessions = await _apiClient.GetSessionsAsync();
+        sessions = await _apiClient.GetSessionsAsync();
 
         CurrentDayOffset = Day;
 
@@ -57,17 +83,22 @@
                                              d?.DayOfWeek))
                              .ToList();
 
-        var filterDate = sessions.Min(s => s.StartTime?.Date)?.AddDays(CurrentDayOffset);
-
-        groupedSessions = sessions.Where(s => s.StartTime?.Date == filterDate)
-                           .OrderBy(s => s.TrackId)
-                           .GroupBy(s => s.StartTime)
-                           .OrderBy(g => g.Key);
+        PopulateAgenda();
     }
 
     private void ChangeDate(int offset)
     {
         CurrentDayOffset = offset;
         PopulateAgenda();
+    }
+
+    private void PopulateAgenda()
+    {
+        var filterDate = sessions.Min(s => s.StartTime?.Date)?.AddDays(CurrentDayOffset);
+
+        groupedSessions = sessions.Where(s => s.StartTime?.Date == filterDate)
+                           .OrderBy(s => s.TrackId)
+                           .GroupBy(s => s.StartTime)
+                           .OrderBy(g => g.Key);
     }
 }

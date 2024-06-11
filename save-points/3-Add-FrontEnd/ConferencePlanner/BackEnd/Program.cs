@@ -37,6 +37,7 @@ namespace BackEnd
             app.MapSpeakerEndpoints();
             app.MapAttendeeEndpoints();
             app.MapSessionEndpoints();
+            app.MapSearchEndpoints();
 
             app.Run();
         }
