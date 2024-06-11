@@ -1,0 +1,73 @@
+﻿@page "/{day:int?}"
+@page "/Home/{day:int?}"
+@using FrontEnd.Services
+@using ConferenceDTO
+@inject IApiClient _apiClient
+@inject ILogger<Home> Logger
+
+<PageTitle>Home</PageTitle>
+
+<ul class="nav nav-pills mb-3">
+    @foreach (var day in dayOffsets)
+    {
+        <li role="presentation" class="nav-item">
+            <a style="cursor:pointer" class="nav-link @(CurrentDayOffset == day.Offset ? "active" : null)" @onclick="@(() => ChangeDate(day.Offset))">@day.DayofWeek?.ToString()</a>
+        </li>
+    }
+</ul>
+
+<div class="agenda">
+    <h1>My Conference @System.DateTime.Now.Year</h1>
+
+    @foreach (var timeSlot in groupedSessions)
+    {
+        <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
+        <ul>
+            @foreach (var session in timeSlot)
+            {
+                <li>@session.Title</li>
+            }
+        </ul>
+    }
+</div>
+
+
+
+@code {
+    [Parameter] public int Day { get; set; }
+
+    private IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> groupedSessions { get; set; } = new List<IGrouping<DateTimeOffset?, SessionResponse>>();
+
+    private IEnumerable<(int Offset, DayOfWeek? DayofWeek)> dayOffsets { get; set; } = null!;
+
+    public int CurrentDayOffset { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var sessions = await _apiClient.GetSessionsAsync();
+
+        CurrentDayOffset = Day;
+
+        var startDate = sessions.Min(s => s.StartTime?.Date);
+
+        dayOffsets = sessions.Select(s => s.StartTime?.Date)
+                             .Distinct()
+                             .OrderBy(d => d)
+                             .Select(d => ((int)Math.Floor((d!.Value - startDate)?.TotalDays ?? 0),
+                                             d?.DayOfWeek))
+                             .ToList();
+
+        var filterDate = sessions.Min(s => s.StartTime?.Date)?.AddDays(CurrentDayOffset);
+
+        groupedSessions = sessions.Where(s => s.StartTime?.Date == filterDate)
+                           .OrderBy(s => s.TrackId)
+                           .GroupBy(s => s.StartTime)
+                           .OrderBy(g => g.Key);
+    }
+
+    private void ChangeDate(int offset)
+    {
+        CurrentDayOffset = offset;
+        PopulateAgenda();
+    }
+}
