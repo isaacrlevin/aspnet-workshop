@@ -1,0 +1,55 @@
+﻿@page "/Speaker/{speakerId:int?}"
+@using ConferenceDTO
+@using FrontEnd.Services
+
+@inject IApiClient ApiClient
+@inject NavigationManager NavigationManager
+@if (SelectedSpeaker != null)
+{
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/Speakers">Speakers</a></li>
+        <li class="breadcrumb-item active">@SelectedSpeaker!.Name</li>
+    </ol>
+
+    <h2>@SelectedSpeaker.Name</h2>
+
+    <p>@SelectedSpeaker.Bio</p>
+
+    if (SelectedSpeaker.Sessions != null)
+    {
+        <h3>Sessions</h3>
+        @if (SelectedSpeaker.Sessions.Count > 0)
+        {
+            <div class="row">
+                <div class="col-md-5">
+                    <ul class="list-group">
+                        @foreach (var session in SelectedSpeaker.Sessions)
+                        {
+                            <li class="list-group-item">
+                                <a href="/Session/@session.Id">@session.Title</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    }
+}
+@code {
+
+    [Parameter] public int SpeakerId { get; set; }
+
+    public SpeakerResponse? SelectedSpeaker { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SpeakerId != null && SpeakerId != 0)
+        {
+            SelectedSpeaker = await ApiClient.GetSpeakerAsync(SpeakerId);
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Speakers");
+        }
+    }
+}

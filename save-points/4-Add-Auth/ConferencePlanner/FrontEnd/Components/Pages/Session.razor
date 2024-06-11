@@ -1,0 +1,58 @@
+﻿@page "/Session/{sessionId:int?}"
+@using ConferenceDTO
+@using FrontEnd.Services
+
+@inject IApiClient ApiClient
+@inject NavigationManager NavigationManager
+@if (SelectedSession != null)
+{
+
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Agenda</a></li>
+        <li class="breadcrumb-item"><a href="/@DayOffset">Day @(DayOffset + 1)</a></li>
+        <li class="breadcrumb-item active">@SelectedSession!.Title</li>
+    </ol>
+
+    <h1>@SelectedSession.Title</h1>
+    <span class="label label-default">@SelectedSession.Track?.Name</span>
+
+    @foreach (var speaker in SelectedSession.Speakers)
+    {
+        <em><a href="/Speaker/@speaker.Id">@speaker.Name</a></em>
+    }
+
+    @foreach (var para in SelectedSession!.Abstract!.Split("\r\n", StringSplitOptions.RemoveEmptyEntries))
+    {
+        <p>@para</p>
+    }
+}
+@code {
+
+    [Parameter] public int SessionId { get; set; }
+
+    public SessionResponse? SelectedSession { get; set; }
+    public int? DayOffset { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SessionId != null && SessionId != 0)
+        {
+            SelectedSession = await ApiClient.GetSessionAsync(SessionId);
+
+            if (SelectedSession == null)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var allSessions = await ApiClient.GetSessionsAsync();
+                var startDate = allSessions.Min(s => s.StartTime?.Date);
+                DayOffset = SelectedSession.StartTime?.Subtract(startDate ?? DateTimeOffset.MinValue).Days;
+            }
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}
