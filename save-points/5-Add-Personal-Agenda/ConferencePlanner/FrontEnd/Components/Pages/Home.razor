@@ -1,0 +1,138 @@
+﻿@page "/{day:int?}"
+@page "/Home/{day:int?}"
+@using FrontEnd.Data
+@using FrontEnd.Services
+@using ConferenceDTO
+@using Microsoft.AspNetCore.Identity
+@inject IApiClient _apiClient
+@inject ILogger<Home> Logger
+@inject UserManager<ApplicationUser> UserManager
+<PageTitle>Home</PageTitle>
+
+<h1 class="mb-4">My Conference @System.DateTime.Now.Year</h1>
+
+<ul class="nav nav-pills mb-3">
+    @foreach (var day in dayOffsets)
+    {
+        <li role="presentation" class="nav-item">
+            <a style="cursor:pointer" class="nav-link @(CurrentDayOffset == day.Offset ? "active" : null)" @onclick="@(() => ChangeDate(day.Offset))">@day.DayofWeek?.ToString()</a>
+        </li>
+    }
+</ul>
+
+@if (groupedSessions != null && groupedSessions.Count() > 0)
+{
+    <div class="agenda">
+        @foreach (var timeSlot in groupedSessions)
+        {
+            <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
+            <div class="row">
+                @foreach (var session in timeSlot)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card shadow session h-100">
+                            <div class="card-header">@session.Track?.Name</div>
+                            <div class="card-body">
+                                <h5 class="card-title"><a href="/Session/@session.Id">@session.Title</a></h5>
+                            </div>
+                            <div class="card-footer">
+                                <ul class="list-inline mb-0">
+                                    @foreach (var speaker in session.Speakers)
+                                    {
+                                        <li class="list-inline-item">
+                                            <a href="Speaker/@speaker.Id">@speaker.Name</a>
+                                        </li>
+                                    }
+
+
+                                    @if (IsAdmin)
+                                    {
+                                        <li>
+                                            <a href="/Admin/EditSession/@session.Id" class="btn btn-default btn-sm">Edit</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <h3>You Have Not Added Any Sessions</h3>
+}
+
+
+
+@code {
+    [Parameter] public int Day { get; set; }
+
+    private IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> groupedSessions { get; set; } = new List<IGrouping<DateTimeOffset?, SessionResponse>>();
+
+    private IEnumerable<(int Offset, DayOfWeek? DayofWeek)> dayOffsets { get; set; } = new List<(int Offset, DayOfWeek? DayofWeek)>();
+
+    public int CurrentDayOffset { get; set; }
+
+    private List<SessionResponse> sessions { get; set; } = new List<SessionResponse>();
+
+    public bool IsAdmin { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (authenticationState is not null)
+        {
+            var authState = await authenticationState;
+            var authStateUser = authState?.User;
+
+            if (authStateUser is not null)
+            {
+                if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
+                {
+                    var user = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
+                    if (user is not null)
+                    {
+                        IsAdmin = user.IsAdmin;
+                    }
+
+                }
+            }
+        }
+
+        sessions = await _apiClient.GetSessionsAsync();
+
+        CurrentDayOffset = Day;
+
+        var startDate = sessions.Min(s => s.StartTime?.Date);
+
+        dayOffsets = sessions.Select(s => s.StartTime?.Date)
+                             .Distinct()
+                             .OrderBy(d => d)
+                             .Select(d => ((int)Math.Floor((d!.Value - startDate)?.TotalDays ?? 0),
+                                             d?.DayOfWeek))
+                             .ToList();
+
+        PopulateAgenda();
+    }
+
+    private void ChangeDate(int offset)
+    {
+        CurrentDayOffset = offset;
+        PopulateAgenda();
+    }
+
+    private void PopulateAgenda()
+    {
+        var filterDate = sessions.Min(s => s.StartTime?.Date)?.AddDays(CurrentDayOffset);
+
+        groupedSessions = sessions.Where(s => s.StartTime?.Date == filterDate)
+                           .OrderBy(s => s.TrackId)
+                           .GroupBy(s => s.StartTime)
+                           .OrderBy(g => g.Key);
+    }
+}
