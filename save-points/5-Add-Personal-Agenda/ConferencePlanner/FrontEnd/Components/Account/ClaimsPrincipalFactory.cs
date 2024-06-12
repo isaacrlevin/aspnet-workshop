@@ -25,6 +25,12 @@ namespace FrontEnd.Components.Account
                 identity.MakeAdmin();
             }
 
+            var attendee = await _apiClient.GetAttendeeAsync(user.UserName);
+            if (attendee != null)
+            {
+                identity.MakeAttendee();
+            }
+
             return identity;
         }
     }

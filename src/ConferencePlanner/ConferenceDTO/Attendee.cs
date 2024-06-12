@@ -19,5 +19,6 @@ public class Attendee
     public string? UserName { get; set; }
 
     [EmailAddress]
+    [StringLength(256)]
     public virtual string? EmailAddress { get; set; }
 }

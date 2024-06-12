@@ -1,0 +1,126 @@
+﻿@page "/Welcome"
+@using ConferenceDTO
+@using FrontEnd.Components.Layout
+@using FrontEnd.Data
+@using FrontEnd.Services
+@using Microsoft.AspNetCore.Identity
+
+@attribute [SkipWelcome]
+
+@inject NavigationManager NavigationManager
+@inject IApiClient ApiClient
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<h2>Welcome @User.UserName</h2>
+<p>
+    Register as an attendee to get access to cool features.
+</p>
+
+<EditForm Model="Input" method="post" OnValidSubmit="CreateUser" FormName="create">
+    <DataAnnotationsValidator />
+    <CustomValidation @ref="customValidation" />
+    <ValidationSummary class="text-danger" role="alert" />
+    <input @bind-value="Input.UserName" type="hidden" />
+    <div class="form-group">
+        <label for="firstname" class="form-label">Email</label>
+        <div class="row">
+            <div class="col-md-6">
+                <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="First Name" />
+            </div>
+        </div>
+        <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+    </div>
+    <div class="form-group">
+        <label for="lastname" class="form-label">Last Name</label>
+        <div class="row">
+
+
+            <div class="col-md-6">
+                <InputText @bind-Value="Input.LastName" class="form-control" placeholder="Last Name" />
+            </div>
+        </div>
+        <ValidationMessage For="() => Input.LastName" class="text-danger" />
+    </div>
+    <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <div class="row">
+            <div class="col-md-6">
+                <InputText @bind-Value="Input.EmailAddress" class="form-control" placeholder="Email" />
+                <ValidationMessage For="() => Input.EmailAddress" class="text-danger" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public ApplicationUser User { get; set; } = new ApplicationUser();
+
+    [SupplyParameterFromForm]
+    private Attendee Input { get; set; } = new();
+
+    private CustomValidation? customValidation;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        bool redirect = true;
+        if (authenticationState is not null)
+        {
+            var authState = await authenticationState;
+            var authStateUser = authState?.User;
+
+            if (authStateUser is not null)
+            {
+                if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
+                {
+                    User = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
+                    if (User is not null)
+                    {
+                        if (!User.IsAttendee)
+                        {
+                            redirect = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!redirect)
+        {
+            Input.UserName = User!.UserName!;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task CreateUser()
+    {
+        customValidation?.ClearErrors();
+
+        var errors = new Dictionary<string, List<string>>();
+        var success = await ApiClient.AddAttendeeAsync(Input);
+
+        if (!success)
+        {
+            errors.Add("", new List<string> { "There was an issue creating the attendee for this user." });
+            customValidation?.DisplayErrors(errors);
+        }
+        else
+        {
+            User.IsAttendee = true;
+            UserManager.UpdateAsync(User);
+            await SignInManager.RefreshSignInAsync(User);
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

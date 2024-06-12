@@ -48,7 +48,6 @@ public class Program
             client.BaseAddress = new Uri(builder.Configuration["serviceUrl"]);
         });
 
-        //builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<IAdminService, AdminService>();
 
         var app = builder.Build();
@@ -70,7 +69,7 @@ public class Program
         app.UseStaticFiles();
         app.UseAntiforgery();
 
-        //app.UseMiddleware<RequireLoginMiddleware>();
+        app.UseMiddleware<RequireLoginMiddleware>();
 
         app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 

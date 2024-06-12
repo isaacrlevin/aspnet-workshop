@@ -25,11 +25,11 @@ Day 2: Make it cool
 
 React front end - show the data
 
-Todo: 
+Todo:
 Who covers which part
 
 David: Backend
 David: Auth (Twitter is done, will add Google)
-Damian: Public and Admin views 
+Damian: Public and Admin views
 Jon: Seed data, markdown
-Jon: SPA with React
+

@@ -13,7 +13,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {
@@ -48,4 +48,22 @@ h1:focus {
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
+}
+
+.bi {
+    display: inline-block;
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.75rem;
+    top: -1px;
+    background-size: cover;
+}
+
+.bi-star {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='black' viewBox='0 0 16 16'%3E%3Cpath d='m8,11.83l4.63,2.83l-1.23,-5.34l4.09,-3.59l-5.39,-0.47l-2.11,-5.04l-2.11,5.04l-5.39,0.47l4.09,3.59l-1.23,5.34l4.64,-2.83z'/%3E%3C/svg%3E");
+}
+
+.bi-star-outline {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='black' viewBox='0 0 16 16'%3E%3Cpath d='m15.25,5.6l-5.3,-0.46l-2.07,-4.89l-2.07,4.89l-5.3,0.46l4.02,3.49l-1.21,5.19l4.56,-2.75l4.56,2.75l-1.21,-5.19l4.02,-3.49zm-6.77,4.92l-0.6,-0.36l-0.6,0.36l-2.19,1.32l0.58,-2.49l0.16,-0.69l-0.53,-0.46l-1.93,-1.68l2.55,-0.22l0.7,-0.06l0.27,-0.65l1,-2.35l1,2.35l0.27,0.65l0.7,0.06l2.55,0.22l-1.93,1.68l-0.53,0.46l0.16,0.69l0.58,2.49l-2.19,-1.32z'/%3E%3C/svg%3E");
 }
