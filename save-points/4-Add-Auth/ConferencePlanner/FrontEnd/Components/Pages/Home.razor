@@ -1,10 +1,12 @@
 ﻿@page "/{day:int?}"
 @page "/Home/{day:int?}"
+@using FrontEnd.Data
 @using FrontEnd.Services
 @using ConferenceDTO
+@using Microsoft.AspNetCore.Identity
 @inject IApiClient _apiClient
 @inject ILogger<Home> Logger
-
+@inject UserManager<ApplicationUser> UserManager
 <PageTitle>Home</PageTitle>
 
 <h1 class="mb-4">My Conference @System.DateTime.Now.Year</h1>
@@ -41,6 +43,14 @@
                                             <a href="Speaker/@speaker.Id">@speaker.Name</a>
                                         </li>
                                     }
+
+
+                                    @if (IsAdmin)
+                                    {
+                                        <li>
+                                            <a href="/Admin/EditSession/@session.Id" class="btn btn-default btn-sm">Edit</a>
+                                        </li>
+                                    }
                                 </ul>
                             </div>
                         </div>
@@ -68,8 +78,32 @@ else
 
     private List<SessionResponse> sessions { get; set; } = new List<SessionResponse>();
 
+    public bool IsAdmin { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        if (authenticationState is not null)
+        {
+            var authState = await authenticationState;
+            var authStateUser = authState?.User;
+
+            if (authStateUser is not null)
+            {
+                if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
+                {
+                    var user = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
+                    if (user is not null)
+                    {
+                        IsAdmin = user.IsAdmin;
+                    }
+
+                }
+            }
+        }
+
         sessions = await _apiClient.GetSessionsAsync();
 
         CurrentDayOffset = Day;

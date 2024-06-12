@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using FrontEnd.Services
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using FrontEnd.Data
@@ -14,6 +15,7 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject IAdminService AdminService
 
 <PageTitle>Register</PageTitle>
 
@@ -72,10 +74,27 @@
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+        if (await AdminService.AllowAdminUserCreationAsync())
+        {
+            // Set as admin user
+            user.IsAdmin = true;
+        }
+
+
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
         {
+            if (user.IsAdmin)
+            {
+                Logger.LogInformation("Admin user created a new account with password.");
+            }
+            else
+            {
+                Logger.LogInformation("User created a new account with password.");
+            }
+
             identityErrors = result.Errors;
             return;
         }
