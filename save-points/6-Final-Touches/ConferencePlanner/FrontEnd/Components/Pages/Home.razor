@@ -1,0 +1,19 @@
+﻿@page "/{day:int?}"
+@page "/Home/{day:int?}"
+@using FrontEnd.Components.Pages.Shared
+@using FrontEnd.Data
+@using Microsoft.AspNetCore.Identity
+@rendermode @(new InteractiveServerRenderMode(false))
+@inject ILogger<Home> Logger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager
+<PageTitle>Home</PageTitle>
+
+<h1 class="mb-4">My Conference @System.DateTime.Now.Year</h1>
+
+<Agenda CurrentDayOffset="Day" GetMyAgenda="false" />
+
+@code {
+    [Parameter] public int Day { get; set; }
+
+}
