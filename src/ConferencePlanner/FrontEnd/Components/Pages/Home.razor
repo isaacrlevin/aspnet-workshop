@@ -1,6 +1,6 @@
 ﻿@page "/{day:int?}"
 @page "/Home/{day:int?}"
-@rendermode @(new InteractiveServerRenderMode(false))
+
 @inject ILogger<Home> Logger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject AppState AppState

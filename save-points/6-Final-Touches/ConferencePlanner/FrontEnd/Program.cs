@@ -6,6 +6,7 @@ using FrontEnd.Components;
 using FrontEnd.Components.Account;
 using FrontEnd.Data;
 using FrontEnd.Services;
+using FrontEnd.HealthChecks;
 
 namespace FrontEnd;
 
@@ -42,6 +43,10 @@ public class Program
             .AddClaimsPrincipalFactory<ClaimsPrincipalFactory>()
             .AddDefaultTokenProviders();
 
+        builder.Services.AddHealthChecks()
+                .AddCheck<BackendHealthCheck>("backend")
+                .AddDbContextCheck<ApplicationDbContext>();
+
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
         builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
         {
@@ -49,8 +54,10 @@ public class Program
         });
 
         builder.Services.AddSingleton<IAdminService, AdminService>();
-
+        builder.Services.AddSingleton<AppState>();
         var app = builder.Build();
+
+        app.MapHealthChecks("/health");
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

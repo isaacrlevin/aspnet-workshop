@@ -118,7 +118,7 @@
         else
         {
             User.IsAttendee = true;
-            UserManager.UpdateAsync(User);
+            await UserManager.UpdateAsync(User);
             await SignInManager.RefreshSignInAsync(User);
             NavigationManager.NavigateTo("/");
         }

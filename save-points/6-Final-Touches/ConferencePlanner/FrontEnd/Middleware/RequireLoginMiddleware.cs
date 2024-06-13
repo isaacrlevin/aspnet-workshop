@@ -9,9 +9,12 @@ namespace FrontEnd
     {
         private readonly RequestDelegate _next;
 
-        public RequireLoginMiddleware(RequestDelegate next)
+        private readonly AppState _appState;
+
+        public RequireLoginMiddleware(RequestDelegate next, AppState appState)
         {
             _next = next;
+            _appState = appState;
         }
 
         public async Task Invoke(HttpContext context)
@@ -27,12 +30,23 @@ namespace FrontEnd
 
                 var isAttendee = user.IsAttendee();
 
+                _appState.SetIsAdmin(user.IsAdmin());
+                _appState.SetIsAttendee(isAttendee);
+                _appState.SetUserName(user.Identity.Name);
+
                 if (!isAttendee)
                 {
+                    _appState.IsAttendee = false;
                     context.Response.Redirect("/Welcome");
 
                     return;
                 }
+            }
+            else
+            {
+                _appState.SetIsAdmin(false);
+                _appState.SetIsAttendee(false);
+                _appState.SetUserName(null);
             }
 
             await _next(context);

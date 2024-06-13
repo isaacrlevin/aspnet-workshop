@@ -1,9 +1,5 @@
 ﻿@page "/Speaker/{speakerId:int?}"
-@using ConferenceDTO
-@using FrontEnd.Services
 
-@inject IApiClient ApiClient
-@inject NavigationManager NavigationManager
 @if (SelectedSpeaker != null)
 {
     <ol class="breadcrumb">

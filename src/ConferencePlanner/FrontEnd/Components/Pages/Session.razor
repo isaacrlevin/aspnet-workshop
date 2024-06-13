@@ -92,7 +92,7 @@
         IsInPersonalAgenda = true;
     }
 
-    private async Task RemoveSessionToUser()
+    private async Task RemoveSessionFromUser()
     {
         await ApiClient.RemoveSessionFromAttendeeAsync(AppState.UserName, SessionId);
         AppState.RemoveSessionFromUser(SessionId);

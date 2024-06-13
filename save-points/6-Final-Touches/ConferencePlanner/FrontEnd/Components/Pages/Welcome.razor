@@ -1,16 +1,11 @@
 ﻿@page "/Welcome"
-@using ConferenceDTO
-@using FrontEnd.Components.Layout
-@using FrontEnd.Data
-@using FrontEnd.Services
-@using Microsoft.AspNetCore.Identity
-
 @attribute [SkipWelcome]
 
-@inject NavigationManager NavigationManager
-@inject IApiClient ApiClient
-@inject SignInManager<ApplicationUser> SignInManager
+@using FrontEnd.Components.Layout
+@using Microsoft.AspNetCore.Identity
+
 @inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 <h2>Welcome @User.UserName</h2>
 <p>
@@ -66,36 +61,19 @@
 
     private CustomValidation? customValidation;
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
-        bool redirect = true;
-        if (authenticationState is not null)
+        if (AppState.IsLoggedIn)
         {
-            var authState = await authenticationState;
-            var authStateUser = authState?.User;
-
-            if (authStateUser is not null)
+            User = await UserManager.FindByNameAsync(AppState.UserName);
+            if (!AppState.IsAttendee)
             {
-                if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
-                {
-                    User = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
-                    if (User is not null)
-                    {
-                        if (!User.IsAttendee)
-                        {
-                            redirect = false;
-                        }
-                    }
-                }
+                Input.UserName = User!.UserName!;
             }
-        }
-
-        if (!redirect)
-        {
-            Input.UserName = User!.UserName!;
+            else
+            {
+                NavigationManager.NavigateTo("/");
+            }
         }
         else
         {
@@ -118,7 +96,7 @@
         else
         {
             User.IsAttendee = true;
-            UserManager.UpdateAsync(User);
+            await UserManager.UpdateAsync(User);
             await SignInManager.RefreshSignInAsync(User);
             NavigationManager.NavigateTo("/");
         }

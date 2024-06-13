@@ -1,12 +1,6 @@
 ﻿@page "/Session/{sessionId:int?}"
-@using ConferenceDTO
-@using FrontEnd.Data
-@using FrontEnd.Services
-@using Microsoft.AspNetCore.Identity
+@rendermode @(new InteractiveServerRenderMode(false))
 
-@inject IApiClient ApiClient
-@inject NavigationManager NavigationManager
-@inject UserManager<ApplicationUser> UserManager
 @if (SelectedSession != null)
 {
 
@@ -30,16 +24,16 @@
     }
 
     <p>
-        @if (IsAdmin)
+        @if (AppState.IsAdmin)
         {
             <a href="/Admin/EditSession/@SelectedSession.Id" class="btn btn-default btn-sm">Edit</a>
         }
 
-        @if (IsAttendee)
+        @if (AppState.IsAttendee)
         {
             @if (IsInPersonalAgenda)
             {
-                <button @onclick="RemoveSessionToUser" class="btn btn-default btn-sm" title="Remove from my personal agenda">
+                <button @onclick="RemoveSessionFromUser" class="btn btn-default btn-sm" title="Remove from my personal agenda">
                     <i class="bi bi-star" aria-hidden="true"></i>
                 </button>
             }
@@ -59,23 +53,18 @@
     public SessionResponse? SelectedSession { get; set; }
     public int? DayOffset { get; set; }
 
-    public bool IsAdmin { get; set; }
-
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-
     public bool IsInPersonalAgenda { get; set; }
-    public bool IsAttendee { get; set; }
-
-    public string UserName { get; set; }
-
-    public List<SessionResponse> UserSessions { get; set; } = new List<SessionResponse>();
 
     protected override async Task OnInitializedAsync()
     {
         if (SessionId != null && SessionId != 0)
         {
-            SelectedSession = await ApiClient.GetSessionAsync(SessionId);
+            if (AppState.AllSessions == null || AppState.AllSessions.Count ==0)
+            {
+                AppState.AllSessions = await ApiClient.GetSessionsAsync();
+            }
+
+            SelectedSession = AppState.AllSessions.Where(a=> a.Id == SessionId).FirstOrDefault();
 
             if (SelectedSession == null)
             {
@@ -83,34 +72,12 @@
             }
             else
             {
-                var allSessions = await ApiClient.GetSessionsAsync();
-                if (authenticationState is not null)
+                if (AppState.IsLoggedIn)
                 {
-                    var authState = await authenticationState;
-                    var authStateUser = authState?.User;
-
-                    if (authStateUser is not null)
-                    {
-                        if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
-                        {
-                            var user = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
-                            if (user is not null)
-                            {
-                                UserName = user.UserName;
-                                if (user.IsAttendee)
-                                {
-                                    IsAttendee = true;
-
-                                }
-                                UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
-
-                                IsInPersonalAgenda = UserSessions.Any(s => s.Id == SelectedSession.Id);
-                            }
-                        }
-                    }
+                    IsInPersonalAgenda = AppState.UserSessions.Any(s => s.Id == SelectedSession.Id);
                 }
 
-                var startDate = allSessions.Min(s => s.StartTime?.Date);
+                var startDate = AppState.AllSessions.Min(s => s.StartTime?.Date);
                 DayOffset = SelectedSession.StartTime?.Subtract(startDate ?? DateTimeOffset.MinValue).Days;
             }
         }
@@ -122,15 +89,15 @@
 
     private async Task AddSessionToUser()
     {
-        await ApiClient.AddSessionToAttendeeAsync(UserName, SessionId);
-        UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
+        await ApiClient.AddSessionToAttendeeAsync(AppState.UserName, SessionId);
+        AppState.AddSessionToUser(SessionId);
         IsInPersonalAgenda = true;
     }
 
-    private async Task RemoveSessionToUser()
+    private async Task RemoveSessionFromUser()
     {
-        await ApiClient.RemoveSessionFromAttendeeAsync(UserName, SessionId);
-        UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
+        await ApiClient.RemoveSessionFromAttendeeAsync(AppState.UserName, SessionId);
+        AppState.RemoveSessionFromUser(SessionId);
         IsInPersonalAgenda = false;
     }
 }

@@ -65,7 +65,7 @@
     protected override async Task OnInitializedAsync()
     {
         if (AppState.IsLoggedIn && (AppState.IsAttendee || AppState.IsAdmin))
-        {            
+        {
             NavigationManager.NavigateTo("/");
         }
 
@@ -115,9 +115,8 @@
         }
         else
         {
-            //await UserManager.MakeAttendeeAsync(User);
             User.IsAttendee = true;
-            UserManager.UpdateAsync(User);
+            await UserManager.UpdateAsync(User);
             await SignInManager.RefreshSignInAsync(User);
             AppState.SetIsAttendee(User.IsAttendee);
             NavigationManager.NavigateTo("/");

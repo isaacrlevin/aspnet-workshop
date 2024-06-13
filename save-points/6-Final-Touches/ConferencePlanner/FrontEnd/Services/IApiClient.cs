@@ -18,4 +18,6 @@ public interface IApiClient
     Task<List<SessionResponse>> GetSessionsByAttendeeAsync(string name);
     Task AddSessionToAttendeeAsync(string name, int sessionId);
     Task RemoveSessionFromAttendeeAsync(string name, int sessionId);
+
+    Task<bool> CheckHealthAsync();
 }

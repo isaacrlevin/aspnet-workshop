@@ -1,14 +1,8 @@
 ﻿@page "/Admin/EditSession/{sessionId:int?}"
-@using ConferenceDTO
-@using FrontEnd.Data
-@using FrontEnd.Services
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Identity
+
 @attribute [Authorize]
 
-@inject UserManager<ApplicationUser> UserManager
-@inject IApiClient ApiClient
-@inject NavigationManager NavigationManager
 <h3>Edit Session - @SelectedSession.Title</h3>
 
    @if (ShowMessage)
@@ -64,35 +58,14 @@
 
     private bool IsAdmin { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-
     public bool ShowMessage => !string.IsNullOrEmpty(Message);
 
     public string Message { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (authenticationState is not null)
-        {
-            var authState = await authenticationState;
-            var authStateUser = authState?.User;
 
-            if (authStateUser is not null)
-            {
-                if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
-                {
-                    var user = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
-                    if (user is not null)
-                    {
-                        IsAdmin = user.IsAdmin;
-                    }
-
-                }
-            }
-        }
-
-        if (!IsAdmin)
+        if (!AppState.IsAdmin)
         {
             NavigationManager.NavigateTo("/");
         }
@@ -106,7 +79,7 @@
     private async Task SubmitEditSession()
     {
         await ApiClient.PutSessionAsync(SelectedSession);
-
+        AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
         Message = "Session updated successfully!";
     }
 
@@ -117,7 +90,7 @@
         if (session != null)
         {
             await ApiClient.DeleteSessionAsync(sessionId);
-
+            AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
             Message = "Session deleted successfully!";
             NavigationManager.NavigateTo("/");
         }

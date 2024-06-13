@@ -71,7 +71,14 @@
 }
 else
 {
-    <h3>You Have Not Added Any Sessions</h3>
+    if (GetMyAgenda)
+    {
+        <h3>You Have Not Added Any Sessions to your agenda</h3>
+    }
+    else
+    {
+        <h3>You Have Not Added Any Sessions to the database</h3>
+    }
 }
 
 

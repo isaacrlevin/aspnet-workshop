@@ -1,3 +1,4 @@
+using BackEnd.Data;
 using BackEnd.Endpoints;
 
 namespace BackEnd
@@ -14,6 +15,9 @@ namespace BackEnd
 
             builder.Services.AddSqlite<BackEnd.Data.ApplicationDbContext>(connectionString);
 
+            builder.Services.AddHealthChecks()
+                            .AddDbContextCheck<ApplicationDbContext>();
+
             // Add services to the container.
             builder.Services.AddAuthorization();
 
@@ -22,6 +26,8 @@ namespace BackEnd
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            app.MapHealthChecks("/health");
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

@@ -1,83 +1,88 @@
-﻿@using ConferenceDTO
-@using FrontEnd.Data
-@using FrontEnd.Services
-@using Microsoft.AspNetCore.Identity
+﻿@rendermode @(new InteractiveServerRenderMode(false))
 
-@inject IApiClient ApiClient
-@inject UserManager<ApplicationUser> UserManager
-@if (dayOffsets != null)
-{
-    <ul class="nav nav-pills mb-3">
-        @foreach (var day in dayOffsets)
+<SpinLoader IsLoading="@(groupedSessions == null)" Center="true">
+    <ContentTemplate>
+        @if (dayOffsets != null)
         {
-            <li role="presentation" class="nav-item">
-                <a style="cursor:pointer" class="nav-link @(CurrentDayOffset == day.Offset ? "active" : null)" @onclick="@(() => ChangeDate(day.Offset))">@day.DayofWeek?.ToString()</a>
-            </li>
-        }
-    </ul>
-}
-@if (groupedSessions != null && groupedSessions.Count() > 0)
-{
-    <div class="agenda">
-        @foreach (var timeSlot in groupedSessions)
-        {
-            <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
-            <div class="row">
-                @foreach (var session in timeSlot)
+            <ul class="nav nav-pills mb-3">
+                @foreach (var day in dayOffsets)
                 {
-                    <div class="col-md-3 mb-4">
-                        <div class="card shadow session h-100">
-                            <div class="card-header">@session.Track?.Name</div>
-                            <div class="card-body">
-                                <h5 class="card-title"><a href="/Session/@session.Id">@session.Title</a></h5>
-                            </div>
-                            <div class="card-footer">
-                                <ul class="list-inline mb-0">
-                                    @foreach (var speaker in session.Speakers)
-                                    {
-                                        <li class="list-inline-item">
-                                            <a href="Speaker/@speaker.Id">@speaker.Name</a>
-                                        </li>
-                                    }
-                                </ul>
-                                @if (IsLoggedIn)
-                                {
-                                    <p class="mb-0">
-                                        @if (IsAdmin)
-                                        {
-                                            <a href="/Admin/EditSession/@session.Id" class="btn btn-default btn-sm">Edit</a>
-                                        }
-                                        @if (IsAttendee)
-                                        {
-                                            @if (userSessionIds.Contains(session.Id))
-                                            {
-                                                <button @onclick="@(() => RemoveSessionToUser(session.Id))" class="btn btn-default btn-sm bg-transparent" title="Remove from my personal agenda">
-                                                    <i class="bi bi-star" aria-hidden="true"></i>
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <button @onclick="@(() => AddSessionToUser(session.Id))" class="btn btn-default btn-sm bg-transparent" title="Add to my personal agenda">
-                                                    <i class="bi bi-star-outline" aria-hidden="true"></i>
-                                                </button>
-                                            }
+                    <li role="presentation" class="nav-item">
+                        <a style="cursor:pointer" class="nav-link @(CurrentDayOffset == day.Offset ? "active" : null)" @onclick="@(() => ChangeDate(day.Offset))">@day.DayofWeek?.ToString()</a>
+                    </li>
+                }
+            </ul>
+        }
 
+        @if (groupedSessions.Count() > 0)
+        {
+            <div class="agenda">
+                @foreach (var timeSlot in groupedSessions)
+                {
+                    <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
+                    <div class="row">
+                        @foreach (var session in timeSlot)
+                        {
+                            <div class="col-md-3 mb-4">
+                                <div class="card shadow session h-100">
+                                    <div class="card-header">@session.Track?.Name</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title"><a href="/Session/@session.Id">@session.Title</a></h5>
+                                    </div>
+                                    <div class="card-footer">
+                                        <ul class="list-inline mb-0">
+                                            @foreach (var speaker in session.Speakers)
+                                            {
+                                                <li class="list-inline-item">
+                                                    <a href="Speaker/@speaker.Id">@speaker.Name</a>
+                                                </li>
+                                            }
+                                        </ul>
+                                        @if (AppState.IsLoggedIn)
+                                        {
+                                            <p class="mb-0">
+                                                @if (AppState.IsAdmin)
+                                                {
+                                                    <a href="/Admin/EditSession/@session.Id" class="btn btn-default btn-sm">Edit</a>
+                                                }
+                                                @if (AppState.IsAttendee)
+                                                {
+                                                    @if (userSessionIds.Contains(session.Id))
+                                                    {
+                                                        <button @onclick="@(() => RemoveSessionFromUser(session.Id))" class="btn btn-default btn-sm bg-transparent" title="Remove from my personal agenda">
+                                                            <i class="bi bi-star" aria-hidden="true"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button @onclick="@(() => AddSessionToUser(session.Id))" class="btn btn-default btn-sm bg-transparent" title="Add to my personal agenda">
+                                                            <i class="bi bi-star-outline" aria-hidden="true"></i>
+                                                        </button>
+                                                    }
+                                                }
+                                            </p>
                                         }
-                                    </p>
-                                }
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        }
                     </div>
                 }
             </div>
         }
-    </div>
-}
-else
-{
-    <h3>You Have Not Added Any Sessions</h3>
-}
-
+        else
+        {
+            if (GetMyAgenda)
+            {
+                <h3>You Have Not Added Any Sessions to your agenda</h3>
+            }
+            else
+            {
+                <h3>You Have Not Added Any Sessions to the database</h3>
+            }
+        }
+    </ContentTemplate>
+</SpinLoader>
 
 @code {
     [Parameter]
@@ -86,10 +91,7 @@ else
     [Parameter]
     public bool GetMyAgenda { get; set; } = false;
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-
-    private IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> groupedSessions { get; set; } = new List<IGrouping<DateTimeOffset?, SessionResponse>>();
+    private IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> groupedSessions { get; set; }
 
     private List<SessionResponse> sessions { get; set; } = new List<SessionResponse>();
 
@@ -97,62 +99,27 @@ else
 
     private List<int> userSessionIds { get; set; } = new List<int>();
 
-    private bool IsAdmin { get; set; }
-
-    private bool IsAttendee { get; set; }
-
-    private bool IsLoggedIn { get; set; }
-
-    private string UserName { get; set; }
-
-    private List<SessionResponse> UserSessions { get; set; } = new List<SessionResponse>();
-
-    private List<SessionResponse> AllSessions { get; set; } = new List<SessionResponse>();
-
     protected override async Task OnInitializedAsync()
     {
-        if (authenticationState is not null)
+        if (AppState.AllSessions == null || AppState.AllSessions.Count == 0)
         {
-            var authState = await authenticationState;
-            var authStateUser = authState?.User;
-
-            if (authStateUser is not null)
-            {
-                if (authStateUser.Identity is not null && authStateUser.Identity.IsAuthenticated)
-                {
-                    var user = await UserManager.FindByNameAsync(authStateUser.Identity.Name);
-                    if (user is not null)
-                    {
-                        UserName = user.UserName;
-                        IsLoggedIn = true;
-                        if (user.IsAttendee)
-                        {
-                            IsAttendee = true;
-
-                        }
-
-                        UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
-                    }
-                }
-            }
+            AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
         }
 
-        AllSessions = await ApiClient.GetSessionsAsync();
-
-        if (IsAttendee)
+        if (AppState.IsAttendee)
         {
             //Attendee
-            UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
-            userSessionIds = UserSessions.Select(u => u.Id).ToList();
+            AppState.SetUserSessions(await ApiClient.GetSessionsByAttendeeAsync(AppState.UserName));
+            userSessionIds = AppState.UserSessions.Select(u => u.Id).ToList();
         }
 
         if (GetMyAgenda)
         {
-            sessions = UserSessions;
+            sessions = AppState.UserSessions;
         }
         else
         {
-            sessions = AllSessions!;
+            sessions = AppState.AllSessions!;
         }
 
         var startDate = sessions.Min(s => s.StartTime?.Date);
@@ -184,15 +151,15 @@ else
 
     private async Task AddSessionToUser(int SessionId)
     {
-        await ApiClient.AddSessionToAttendeeAsync(UserName, SessionId);
-        UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
-        userSessionIds = UserSessions.Select(u => u.Id).ToList();
+        await ApiClient.AddSessionToAttendeeAsync(AppState.UserName, SessionId);
+        AppState.AddSessionToUser(SessionId);
+        userSessionIds = AppState.UserSessions.Select(u => u.Id).ToList();
     }
 
-    private async Task RemoveSessionToUser(int SessionId)
+    private async Task RemoveSessionFromUser(int SessionId)
     {
-        await ApiClient.RemoveSessionFromAttendeeAsync(UserName, SessionId);
-        UserSessions = await ApiClient.GetSessionsByAttendeeAsync(UserName);
-        userSessionIds = UserSessions.Select(u => u.Id).ToList();
+        await ApiClient.RemoveSessionFromAttendeeAsync(AppState.UserName, SessionId);
+        AppState.RemoveSessionFromUser(SessionId);
+        userSessionIds = AppState.UserSessions.Select(u => u.Id).ToList();
     }
 }
