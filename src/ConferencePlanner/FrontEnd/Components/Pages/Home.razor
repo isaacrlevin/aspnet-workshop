@@ -2,34 +2,12 @@
 @page "/Home/{day:int?}"
 
 @inject ILogger<Home> Logger
-@inject IHttpContextAccessor HttpContextAccessor
-@inject AppState AppState
-@inject UserManager<ApplicationUser> UserManager
 <PageTitle>Home</PageTitle>
 
 <h1 class="mb-4">My Conference @System.DateTime.Now.Year</h1>
 
 <Agenda CurrentDayOffset="Day" GetMyAgenda="false" />
 
-
 @code {
     [Parameter] public int Day { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (HttpContextAccessor.HttpContext is not null && HttpContextAccessor.HttpContext.User is not null)
-        {
-            if (HttpContextAccessor!.HttpContext!.User!.Identity!.IsAuthenticated)
-            {
-                // Get the user and set the AppState (AppState is a service that holds global state for the app)
-                var user = await UserManager.FindByNameAsync(HttpContextAccessor!.HttpContext!.User!.Identity!.Name!);
-                if (user is not null)
-                {
-                    AppState.SetUserName(user!.UserName!);
-                    AppState.SetIsAdmin(user.IsAdmin);
-                    AppState.SetIsAttendee(user.IsAttendee);
-                }
-            }
-        }
-    }
 }

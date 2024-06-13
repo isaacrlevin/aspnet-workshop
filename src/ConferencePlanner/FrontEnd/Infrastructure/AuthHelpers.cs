@@ -37,25 +37,3 @@ namespace System.Security.Claims
             identity.AddClaim(new Claim(AuthConstants.IsAttendee, AuthConstants.TrueValue));
     }
 }
-
-namespace Microsoft.AspNetCore.Identity
-{
-
-    //public static class UserHelpers
-    //{
-    //    public static async Task<bool> IsAttendeeAsync(this UserManager<ApplicationUser> userManager, ApplicationUser user)
-    //    {
-    //        bool isAttendee = false;
-    //        var claim = (await userManager.GetClaimsAsync(user)).Where(a => a.Type == AuthConstants.IsAttendee).FirstOrDefault();
-
-    //        if (claim != null)
-    //        {
-    //            isAttendee = claim.Value == AuthConstants.TrueValue;
-    //        }
-    //        return isAttendee;
-    //    }
-
-    //    public static async Task MakeAttendeeAsync(this UserManager<ApplicationUser> userManager, ApplicationUser user) =>
-    //       await userManager.AddClaimAsync(user, new Claim(AuthConstants.IsAttendee, AuthConstants.TrueValue));
-    //}
-}

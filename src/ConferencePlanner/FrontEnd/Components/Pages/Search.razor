@@ -1,6 +1,5 @@
 ﻿@page "/Search"
-
-@inject IApiClient _apiClient
+@rendermode @(new InteractiveServerRenderMode(false))
 
 <div class="search">
     <h1>Search</h1>
@@ -78,17 +77,14 @@
 
 
 @code {
-        
+
     public string Term { get; set; } = String.Empty;
 
     public List<SearchResult> SearchResults { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        if (!string.IsNullOrWhiteSpace(Term))
-        {
-            SearchResults = await _apiClient.SearchAsync(Term);
-        }
+        await SearchSessions();
     }
 
 
@@ -96,7 +92,7 @@
     {
         if (!string.IsNullOrWhiteSpace(Term))
         {
-            SearchResults = await _apiClient.SearchAsync(Term);
+            SearchResults = await ApiClient.SearchAsync(Term);
         }
     }
 }

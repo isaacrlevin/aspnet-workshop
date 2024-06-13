@@ -1,7 +1,7 @@
 ﻿@page "/MyAgenda/{day:int?}"
+@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 
-@inject IApiClient _apiClient
 @inject ILogger<Home> Logger
 <h1 class="mb-4">My Agenda - My Conference @System.DateTime.Now.Year</h1>
 

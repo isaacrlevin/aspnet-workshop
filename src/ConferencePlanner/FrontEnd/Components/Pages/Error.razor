@@ -24,15 +24,13 @@
     and restarting the app.
 </p>
 
-@code {
+@code{
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
     private string? RequestId { get; set; }
     private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-    [CascadingParameter]
-    public HttpContext? HttpContext { get; set; } = default!;
-
-    protected override void OnInitialized()
-    {
+    protected override void OnInitialized() =>
         RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
-    }
 }

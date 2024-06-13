@@ -5,7 +5,7 @@ namespace FrontEnd.Services
     public class AppState
     {
         public event Action OnChange;
-
+        private void NotifyStateChanged() => OnChange?.Invoke();
         public string UserName { get; set; }
 
         public bool IsAdmin { get; set; }
@@ -16,13 +16,13 @@ namespace FrontEnd.Services
 
         public List<SessionResponse> AllSessions { get; set; } = new List<SessionResponse>();
 
+        public List<SessionResponse> UserSessions { get; set; } = new List<SessionResponse>();
+
         public void SetAllSessions(List<SessionResponse> sessions)
         {
             AllSessions = sessions;
             NotifyStateChanged();
         }
-
-        public List<SessionResponse> UserSessions { get; set; } = new List<SessionResponse>();
 
         public void SetUserSessions(List<SessionResponse> sessions)
         {
@@ -62,7 +62,5 @@ namespace FrontEnd.Services
             UserSessions.Remove(UserSessions.Where(a => a.Id == sessionId).FirstOrDefault());
             NotifyStateChanged();
         }
-
-        private void NotifyStateChanged() => OnChange?.Invoke();
     }
 }

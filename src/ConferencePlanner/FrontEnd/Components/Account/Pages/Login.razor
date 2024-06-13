@@ -9,7 +9,6 @@
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-@inject AppState AppState
 <PageTitle>Log in</PageTitle>
 
 <h1>Log in</h1>
@@ -93,7 +92,6 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
-            AppState.SetUserName(Input.Email);
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)

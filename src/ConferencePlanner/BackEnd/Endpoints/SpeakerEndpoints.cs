@@ -1,6 +1,5 @@
+﻿using BackEnd.Data;
 using Microsoft.EntityFrameworkCore;
-using BackEnd.Data;
-
 namespace BackEnd.Endpoints;
 
 public static class SpeakerEndpoints
@@ -10,15 +9,14 @@ public static class SpeakerEndpoints
         routes.MapGet("/api/Speaker", async (ApplicationDbContext db) =>
         {
             return await db.Speakers.AsNoTracking()
-                            .Include(s => s.SessionSpeakers)
-                            .ThenInclude(ss => ss.Session)
-                            .OrderBy(s => s.Name.Trim())
-                            .Select(s => s.MapSpeakerResponse())
-                            .ToListAsync();
+                                            .Include(s => s.SessionSpeakers)
+                                            .ThenInclude(ss => ss.Session)
+                                            .Select(s => s.MapSpeakerResponse())
+                                            .ToListAsync();
         })
-        .WithTags("Speaker")
-        .WithName("GetAllSpeakers")
-        .Produces<List<ConferenceDTO.Speaker>>(StatusCodes.Status200OK);
+   .WithTags("Speaker")
+   .WithName("GetAllSpeakers")
+   .Produces<List<ConferenceDTO.Speaker>>(StatusCodes.Status200OK);
 
         routes.MapGet("/api/Speaker/{id}", async (int id, ApplicationDbContext db) =>
         {
@@ -30,9 +28,9 @@ public static class SpeakerEndpoints
                     ? Results.Ok(model.MapSpeakerResponse())
                     : Results.NotFound();
         })
-        .WithTags("Speaker")
-        .WithName("GetSpeakerById")
-        .Produces<ConferenceDTO.Speaker>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound);
+   .WithTags("Speaker")
+   .WithName("GetSpeakerById")
+   .Produces<ConferenceDTO.Speaker>(StatusCodes.Status200OK)
+   .Produces(StatusCodes.Status404NotFound);
     }
 }
