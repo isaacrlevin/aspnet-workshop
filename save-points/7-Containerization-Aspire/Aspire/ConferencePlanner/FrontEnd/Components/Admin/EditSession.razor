@@ -1,0 +1,98 @@
+﻿@page "/Admin/EditSession/{sessionId:int?}"
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+<h3>Edit Session - @SelectedSession.Title</h3>
+
+   @if (ShowMessage)
+{
+    <div class="alert alert-success alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>   </button>
+        @Message
+    </div>
+}
+
+<EditForm class="form-horizontal" Model="SelectedSession" method="post" OnValidSubmit="SubmitEditSession" FormName="edit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" role="alert" />
+    <input @bind-value="SelectedSession.Id" type="hidden" />
+    <input @bind-value="SelectedSession.TrackId" type="hidden" />
+
+    <div class="form-group">
+        <label for="title" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <InputText @bind-Value="SelectedSession.Title" class="form-control" autocomplete="title" aria-required="true" placeholder="Title" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="abstract" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <InputTextArea @bind-Value="SelectedSession.Abstract" class="form-control" autocomplete="abstract" aria-required="true" placeholder="Abstract" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="startTime" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="SelectedSession.StartTime" class="form-control" autocomplete="startTime" aria-required="true" placeholder="Start Time" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="endTime" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="SelectedSession.EndTime" class="form-control" autocomplete="endTime" aria-required="true" placeholder="End Time" />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button @onclick="() => DeleteSession(SelectedSession.Id)" class="btn btn-danger" value="Delete">Delete</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public int SessionId { get; set; }
+
+    private SessionResponse? SelectedSession { get; set; } = new SessionResponse();
+
+    private bool IsAdmin { get; set; }
+
+    public bool ShowMessage => !string.IsNullOrEmpty(Message);
+
+    public string Message { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (!AppState.IsAdmin)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        if (SessionId > 0)
+        {
+            SelectedSession = await ApiClient.GetSessionAsync(SessionId);
+        }
+    }
+
+    private async Task SubmitEditSession()
+    {
+        await ApiClient.PutSessionAsync(SelectedSession);
+        AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
+        Message = "Session updated successfully!";
+    }
+
+    private async Task DeleteSession(int sessionId)
+    {
+        var session = await ApiClient.GetSessionAsync(sessionId);
+
+        if (session != null)
+        {
+            await ApiClient.DeleteSessionAsync(sessionId);
+            AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
+            Message = "Session deleted successfully!";
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

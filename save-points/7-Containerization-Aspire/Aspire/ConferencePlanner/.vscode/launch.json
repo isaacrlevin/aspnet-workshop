@@ -1,0 +1,54 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "BackEnd",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/BackEnd/bin/Debug/net8.0/BackEnd.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/BackEnd",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+http://\\S+:([0-9]+)",
+                "uriFormat": "http://localhost:%s/swagger/index.html"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "FrontEnd",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/FrontEnd/bin/Debug/net8.0/FrontEnd.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/FrontEnd",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+http://\\S+:([0-9]+)",
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "FrontEnd/BackEnd",
+            "configurations": [
+                "BackEnd",
+                "FrontEnd"
+            ]
+        }
+    ]
+}
