@@ -14,11 +14,11 @@
     </ol>
 
     <h1>@SelectedSession.Title</h1>
-    <span class="label label-default">@SelectedSession.Track?.Name</span>
+    <span class="label label-default">@SelectedSession.Track?.Name&nbsp;</span>
 
     @foreach (var speaker in SelectedSession.Speakers)
     {
-        <em><a href="/Speaker/@speaker.Id">@speaker.Name</a></em>
+        <em><a href="/Speaker/@speaker.Id">@speaker.Name</a>&nbsp;</em>
     }
 
     @foreach (var para in SelectedSession!.Abstract!.Split("\r\n", StringSplitOptions.RemoveEmptyEntries))
