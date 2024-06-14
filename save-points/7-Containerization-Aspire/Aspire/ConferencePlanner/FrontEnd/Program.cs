@@ -15,6 +15,7 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        builder.AddServiceDefaults();
 
         // Add services to the container.
         builder.Services.AddRazorComponents().AddInteractiveServerComponents();
@@ -56,6 +57,7 @@ public class Program
         builder.Services.AddSingleton<IAdminService, AdminService>();
         builder.Services.AddSingleton<AppState>();
         var app = builder.Build();
+        app.MapDefaultEndpoints();
 
         app.MapHealthChecks("/health");
 

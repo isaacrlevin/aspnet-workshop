@@ -8,6 +8,7 @@ namespace BackEnd
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.AddServiceDefaults();
 
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -26,6 +27,8 @@ namespace BackEnd
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            app.MapDefaultEndpoints();
 
             app.MapHealthChecks("/health");
 

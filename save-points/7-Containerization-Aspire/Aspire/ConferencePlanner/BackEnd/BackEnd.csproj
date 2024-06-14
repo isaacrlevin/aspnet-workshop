@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ConferenceDTO\ConferenceDTO.csproj" />
+    <ProjectReference Include="..\ConferencePlanner.ServiceDefaults\ConferencePlanner.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
