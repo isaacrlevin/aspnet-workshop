@@ -17,6 +17,9 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.AddServiceDefaults();
 
+
+        builder.AddRedisOutputCache("cache");
+
         // Add services to the container.
         builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
@@ -51,11 +54,13 @@ public class Program
         builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
         builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["serviceUrl"]);
+            client.BaseAddress = new("https+http://backend");
         });
 
         builder.Services.AddSingleton<IAdminService, AdminService>();
         builder.Services.AddSingleton<AppState>();
+
+
         var app = builder.Build();
         app.MapDefaultEndpoints();
 
@@ -77,6 +82,8 @@ public class Program
 
         app.UseStaticFiles();
         app.UseAntiforgery();
+
+        app.UseOutputCache();
 
         app.UseMiddleware<RequireLoginMiddleware>();
 
