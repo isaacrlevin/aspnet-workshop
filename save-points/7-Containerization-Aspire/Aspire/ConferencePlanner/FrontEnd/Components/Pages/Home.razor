@@ -1,5 +1,7 @@
 ﻿@page "/{day:int?}"
 @page "/Home/{day:int?}"
+@using Microsoft.AspNetCore.OutputCaching
+@attribute [OutputCache(Duration = 5)]
 
 @inject ILogger<Home> Logger
 <PageTitle>Home</PageTitle>

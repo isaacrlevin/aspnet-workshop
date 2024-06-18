@@ -1,5 +1,5 @@
-﻿@rendermode @(new InteractiveServerRenderMode(false))
-
+﻿
+@* @rendermode @(new InteractiveServerRenderMode(false)) *@
 <SpinLoader IsLoading="@(groupedSessions == null)" Center="true">
     <ContentTemplate>
         @if (dayOffsets != null)
@@ -101,10 +101,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AppState.AllSessions == null || AppState.AllSessions.Count == 0)
-        {
-            AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
-        }
+        // if (AppState.AllSessions == null || AppState.AllSessions.Count == 0)
+        // {
+        //     AppState.SetAllSessions(await ApiClient.GetSessionsAsync());
+        // }
 
         if (AppState.IsAttendee)
         {
@@ -119,7 +119,8 @@
         }
         else
         {
-            sessions = AppState.AllSessions!;
+            //sessions = AppState.AllSessions!;
+            sessions = await ApiClient.GetSessionsAsync();
         }
 
         var startDate = sessions.Min(s => s.StartTime?.Date);
