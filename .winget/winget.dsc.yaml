@@ -32,13 +32,13 @@ properties:
    ### Configure Install Ubuntu
    ### -------------------------------------
     - resource: PSDscResources/Script
-     id: ubuntuwsl
+      id: ubuntuwsl
       directives:
         description: Install Ubuntu for WSL
       settings:
         SetScript: |
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          wsl --install -d Ubuntu
+         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+         wsl --install -d Ubuntu
         GetScript: return $false
         TestScript: return $false
 ########################################
