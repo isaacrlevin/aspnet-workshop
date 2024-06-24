@@ -55,13 +55,13 @@ properties:
         id: Microsoft.DotNet.SDK.8
    ### Install .NET 9
    ### -------------------------------------
-    - resource: Microsoft.WinGet.DSC/WinGetPackage
-      id: dotnet
-      directives:
-        description: Install .NET 9
-        allowPrerelease: true
-      settings:
-        id: Microsoft.DotNet.SDK.Preview
+    # - resource: Microsoft.WinGet.DSC/WinGetPackage
+    #   id: dotnet
+    #   directives:
+    #     description: Install .NET 9
+    #     allowPrerelease: true
+    #   settings:
+    #     id: Microsoft.DotNet.SDK.Preview
    ### Setup .NET Aspire
    ### -------------------------------------
     - resource: PSDscResources/Script
