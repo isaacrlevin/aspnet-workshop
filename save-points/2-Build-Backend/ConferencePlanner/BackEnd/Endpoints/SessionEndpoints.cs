@@ -1,4 +1,5 @@
 ﻿using BackEnd.Data;
+using BackEnd.Infrastructure;
 using ConferenceDTO;
 using Microsoft.EntityFrameworkCore;
 

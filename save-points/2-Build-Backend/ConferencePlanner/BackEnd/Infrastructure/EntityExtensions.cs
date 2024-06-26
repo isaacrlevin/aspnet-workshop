@@ -1,4 +1,6 @@
-﻿namespace BackEnd.Infrastructure;
+﻿using BackEnd.Data;
+
+namespace BackEnd.Infrastructure;
 public static class EntityExtensions
 {
     public static ConferenceDTO.SessionResponse MapSessionResponse(this Session session) =>
