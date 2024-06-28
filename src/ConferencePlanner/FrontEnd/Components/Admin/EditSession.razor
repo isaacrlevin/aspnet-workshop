@@ -1,6 +1,6 @@
 ﻿@page "/Admin/EditSession/{sessionId:int?}"
 @using Microsoft.AspNetCore.Authorization
-
+@rendermode InteractiveServer
 @attribute [Authorize]
 
 <h3>Edit Session - @SelectedSession.Title</h3>
